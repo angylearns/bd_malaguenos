@@ -10,9 +10,9 @@ deleteR = Blueprint('producto_blu_delete', __name__)
 @getR.route('/', methods=['GET'])
 def manage_productos_getR():
     ProductoService.get_productos()
-    print("Productos obtenidos:", ProductoService.get_productos())
+    print("Consola: Productos obtenidos.")
 
-    return 'Productos obtenidos.'
+    return 'Página: Productos obtenidos.'
 
 @postR.route('/', methods=['POST'])
 def manage_productos_postR():
@@ -20,7 +20,6 @@ def manage_productos_postR():
         return jsonify({"error": "Request must be JSON"}), 400
     
     # capturamos los datos del json (1)
-    idProd = request.json['idProd'] if 'idProd' in request.json else None
     nombreProd = request.json['nombreProd'] if 'nombreProd' in request.json else None
     descripcionProd = request.json['descripcionProd'] if 'descripcionProd' in request.json else None
     marcaProd = request.json['marcaProd'] if 'marcaProd' in request.json else None
@@ -32,10 +31,10 @@ def manage_productos_postR():
 
     # le pasamos como parámetro el nuevoProducto al método post_productos() (3)    
     if ProductoService.post_productos(nuevoProducto):
-        print('Producto insertado: ', nuevoProducto)
+        print('Consola:Producto insertado: ', nuevoProducto)
         return 'Producto creado.'
     
-    return 'Ok'
+    return 'Página: Ok'
 
 @patchR.route('/<int:id_producto>', methods=['PATCH'])
 def manage_productos_patchR(id_producto):
@@ -53,15 +52,15 @@ def manage_productos_patchR(id_producto):
     productoActualizado = Producto(id_producto, nombreProd, descripcionProd, marcaProd, precioProd, stockProd)
 
     ProductoService.update_productos(productoActualizado)
-    print('Producto actualizado: ', productoActualizado)
+    print('Consola: Producto actualizado: ', productoActualizado)
 
-    return 'Producto actualizado.'
+    return 'Página: Producto actualizado.'
 
 
 @deleteR.route('/<int:idProd>', methods=['DELETE'])
 def manage_productos_deleteR(idProd):
     
     ProductoService.delete_productos(idProd) 
-    print('Producto eliminado.')
+    print('Consola: Producto eliminado.')
 
-    return 'Producto eliminado.'
+    return 'Página: Producto eliminado.'

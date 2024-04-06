@@ -31,7 +31,6 @@ class ProductoService():
         try:
             connection = get_connection()
 
-            idProd = nuevoProducto._id_producto
             nombreProd = nuevoProducto._nombre
             descripcionProd = nuevoProducto._descripcion
             marcaProd = nuevoProducto._marca
