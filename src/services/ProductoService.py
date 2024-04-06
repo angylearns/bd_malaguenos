@@ -13,7 +13,9 @@ class ProductoService():
                 print("Conexión establecida:", connection)
                 with connection.cursor() as bd_malaguenos:
                     # este método cursor() permite ir por cada tabla. Se conecta a la conexión establecida (connection) y puede acceder a todas las tablas, permitiendo que luego ejecutemos cualquier consulta.
-                    bd_malaguenos.execute("SELECT * FROM producto")
+                    # llamamos a procedimiento almacenado
+                    bd_malaguenos.execute("CALL sp_getAllProducts()")
+                    # sp_getAllProducts() es el nombre del procedimiento almacenado que se encuentra en la base de datos: "SELECT * FROM producto;"
                     result = bd_malaguenos.fetchall()
                     print(result)
                     
@@ -28,7 +30,8 @@ class ProductoService():
     def post_productos(cls, nuevoProducto: Producto):
         try:
             connection = get_connection()
-            idProd = None
+
+            idProd = nuevoProducto._id_producto
             nombreProd = nuevoProducto._nombre
             descripcionProd = nuevoProducto._descripcion
             marcaProd = nuevoProducto._marca
@@ -38,15 +41,17 @@ class ProductoService():
             if connection:
 
                 print("Método post", connection)
-                with connection.cursor() as bd_malaguenos:
-                    bd_malaguenos.execute("INSERT INTO producto (id_producto, nombre, descripcion, marca, precio, stock) VALUES (%s, %s, %s, %s, %s, %s)", (idProd, nombreProd, descripcionProd, marcaProd, precioProd, stockProd))
-                    connection.commit()
+                with connection.cursor() as cursor:
+                # Pasar los parámetros al método execute
+                    cursor.execute("CALL sp_postProduct(%s, %s, %s, %s, %s)", (nombreProd, descripcionProd, marcaProd, precioProd, stockProd))
+                connection.commit()
+
                 connection.close()
                 return 'Producto creado.'
             else:
                 print("No se pudo establecer la conexión.")
         except Exception as ex:
-            print("Error al obtener la aplicación:", ex)
+            print("Errorsito al obtener la aplicación:", ex)
             
     @classmethod
     def update_productos(cls, productoActualizado: Producto):
@@ -56,12 +61,11 @@ class ProductoService():
             if connection:
                 print("Método update", connection)
                 with connection.cursor() as bd_malaguenos:
-                    # Preparar la consulta SQL UPDATE
-                    sql_update_query = """UPDATE producto SET nombre = %s, descripcion = %s, marca = %s, precio = %s, stock = %s WHERE id_producto = %s"""
-                    # Valores actualizados del producto
-                    valores_actualizados = (productoActualizado._nombre, productoActualizado._descripcion, productoActualizado._marca, productoActualizado._precio, productoActualizado._stock, productoActualizado._id_producto)
-                    # Ejecutar la consulta de actualización
-                    bd_malaguenos.execute(sql_update_query, valores_actualizados)
+                    sp_update_query = "CALL sp_updateProduct(%s, %s, %s, %s, %s, %s)"
+
+                    valores_actualizados = (productoActualizado._id_producto, productoActualizado._nombre, productoActualizado._descripcion, productoActualizado._marca, productoActualizado._precio, productoActualizado._stock)
+
+                    bd_malaguenos.execute(sp_update_query, valores_actualizados)
                     connection.commit()
                 connection.close()
                 return 'Producto actualizado.'
@@ -69,6 +73,7 @@ class ProductoService():
                 print("No se pudo establecer la conexión.")
         except Exception as ex:
             print("Error al actualizar el producto:", ex)
+
 
     @classmethod
     def delete_productos(cls, idProd):
@@ -78,8 +83,8 @@ class ProductoService():
             if connection:
                 print("Método delete", connection)
                 with connection.cursor() as bd_malaguenos:
-                    sql_delete_query = """DELETE FROM producto WHERE id_producto = %s"""
-                    bd_malaguenos.execute(sql_delete_query, (idProd,))
+                    # Llamada al procedimiento almacenado sp_deleteProduct
+                    bd_malaguenos.callproc('sp_deleteProduct', [idProd])
                     connection.commit()
                 connection.close()
                 return 'Producto eliminado.'

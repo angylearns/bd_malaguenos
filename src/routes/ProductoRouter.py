@@ -9,9 +9,6 @@ deleteR = Blueprint('producto_blu_delete', __name__)
 
 @getR.route('/', methods=['GET'])
 def manage_productos_getR():
-    if not request.is_json:
-        return jsonify({"error": "Request must be JSON"}), 400
-
     ProductoService.get_productos()
     print("Productos obtenidos:", ProductoService.get_productos())
 
@@ -33,18 +30,19 @@ def manage_productos_postR():
     # para nuevo producto, instanciamos el objeto del nuevo producto (2)
     nuevoProducto = Producto(0, nombreProd, descripcionProd, marcaProd, precioProd, stockProd)
 
-    # le pasamos como parámetro el nuevoProducto al método post_productos() (3)
-    ProductoService.post_productos(nuevoProducto)
-    print('Producto insertado: ', nuevoProducto)
-
-    return 'Producto creado.'
+    # le pasamos como parámetro el nuevoProducto al método post_productos() (3)    
+    if ProductoService.post_productos(nuevoProducto):
+        print('Producto insertado: ', nuevoProducto)
+        return 'Producto creado.'
+    
+    return 'Ok'
 
 @patchR.route('/<int:id_producto>', methods=['PATCH'])
-def manage_productos_postR(id_producto):
+def manage_productos_patchR(id_producto):
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
+    
     # capturamos los datos del json (1)
-    idProd = request.json['idProd'] if 'idProd' in request.json else None
     nombreProd = request.json['nombreProd'] if 'nombreProd' in request.json else None
     descripcionProd = request.json['descripcionProd'] if 'descripcionProd' in request.json else None
     marcaProd = request.json['marcaProd'] if 'marcaProd' in request.json else None
@@ -52,17 +50,17 @@ def manage_productos_postR(id_producto):
     stockProd = request.json['stockProd'] if 'stockProd' in request.json else None
 
     # Instanciamos el objeto productoActualizado con los datos capturados
-    productoActualizado = Producto(idProd, nombreProd, descripcionProd, marcaProd, precioProd, stockProd)
+    productoActualizado = Producto(id_producto, nombreProd, descripcionProd, marcaProd, precioProd, stockProd)
 
     ProductoService.update_productos(productoActualizado)
     print('Producto actualizado: ', productoActualizado)
 
     return 'Producto actualizado.'
 
+
 @deleteR.route('/<int:idProd>', methods=['DELETE'])
 def manage_productos_deleteR(idProd):
-    if not request.is_json: 
-        return jsonify({"error": "Request must be JSON"}), 400
+    
     ProductoService.delete_productos(idProd) 
     print('Producto eliminado.')
 
